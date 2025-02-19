@@ -11,6 +11,8 @@ const Demo = () => {
   const [allArticles, setAllArticles] = useState([]);
   const [copied, setCopied] = useState("");
 
+  const [play,setPlay] = useState(false);
+
   // RTK lazy query
   const [getSummary, { error, isFetching }] = useLazyGetSummaryQuery();
 
@@ -58,6 +60,46 @@ const Demo = () => {
       handleSubmit(e);
     }
   };
+
+  const copyHandler = (text) => {
+    navigator.clipboard.writeText(text).then(() => {
+        alert("Text copied to clipboard!");
+    }).catch(err => {
+        console.error("Error copying text: ", err);
+    });
+  }
+
+  const downloadHandler = (text) => {
+    const { jsPDF } = window.jspdf; // Import jsPDF
+    const doc = new jsPDF();
+
+    doc.text(text,0,0); // Add text to the PDF (x, y position)
+    console.log(text);
+    doc.save("document.pdf"); // Save the file with a name
+    
+  }
+
+  const listenHandler = (text) => {
+    setPlay((prev) => !prev);
+    const speech = new SpeechSynthesisUtterance(text);
+    speech.lang = 'en-US'; // Set language (change as needed)
+    speech.rate = 1;       // Adjust rate (1 is normal speed)
+    speech.pitch = 1;      // Adjust pitch (1 is normal pitch)
+    
+    if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
+        console.log(1);
+        window.speechSynthesis.pause();
+    } else if (window.speechSynthesis.paused) {
+        console.log(2);
+
+        window.speechSynthesis.resume();
+    } else {
+        console.log(3);
+
+        window.speechSynthesis.speak(speech);
+    }
+    
+  }
 
   return (
     <section className='mt-16 w-full max-w-xl'>
@@ -136,6 +178,12 @@ const Demo = () => {
                   {article.summary}
                 </p>
               </div>
+              <div className="flex flex-row">
+                <button className="blue_btn ml-3" onClick={() => copyHandler(article.summary)}>Copy</button>
+                <button className="blue_btn ml-3" onClick={() => downloadHandler(article.summary)}>Download</button>
+                <button className="blue_btn ml-3" onClick={() => listenHandler(article.summary)}>{play ? "Pause" : "Play"}</button>
+
+                </div>
             </div>
           )
         )}
